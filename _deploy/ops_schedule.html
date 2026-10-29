@@ -62,6 +62,7 @@ font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:15px;line-
 .ops .edit .line .r{font-size:12px;font-weight:600;text-transform:capitalize;padding-top:8px}
 .ops .edit .line .pt{font-size:10px;color:var(--muted);text-transform:none;letter-spacing:0;margin:2px 0 0}
 .ops .edit .row{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end}
+.ops .edit .row .btn{width:auto;flex:0 0 auto;min-width:110px}
 /* people picker */
 .ops .pk{position:relative}
 .ops .pk .chips{display:flex;flex-wrap:wrap;gap:4px;align-items:center;min-height:36px;padding:4px 6px;border:1px solid var(--line);border-radius:7px;background:var(--surface);cursor:text}
@@ -156,6 +157,8 @@ const CFG = {
   pic_depts: ['Banquet'],
   // ... plus people in this department whose job title matches the pattern (chefs + HOO, not helpers/stewards)
   pic_extra: { dept: 'Kitchen', job: /chef|partie|operations|sous/i },
+  // never PIC, whatever the department (job-title pattern)
+  pic_exclude_job: /admin|clerk|intern/i,
   // Who appears in the team pickers (supervisor / servers / chefs / stewards / driver)
   team_depts: ['Banquet','Kitchen','Steward'],
   // Odoo skill that marks a GDL licence holder, and the minimum level (%) to count
@@ -212,7 +215,8 @@ async function loadEmployees(){
   } catch(e){ console.warn('skills not readable', e); }
   state.employees = Object.values(state.emp);
   state.teamPool = state.employees.filter(e=>CFG.team_depts.includes(e.dept));
-  state.picPool = state.employees.filter(e=>CFG.pic_depts.includes(e.dept) || (e.dept===CFG.pic_extra.dept && CFG.pic_extra.job.test(e.job)));
+  state.picPool = state.employees.filter(e=>!CFG.pic_exclude_job.test(e.job) && (CFG.pic_depts.includes(e.dept) || (e.dept===CFG.pic_extra.dept && CFG.pic_extra.job.test(e.job))))
+    .sort((a,b)=>(a.dept===b.dept?0:(CFG.pic_depts.includes(a.dept)?-1:1)) || shortName(a.name).localeCompare(shortName(b.name)));
 }
 
 async function init(){
@@ -408,7 +412,8 @@ function initPickers(form, e, sel){
     const list=()=>{ const s=q.value.trim().toLowerCase();
       let pool=state.teamPool.filter(p=>!sel[lineId].includes(p.id));
       if (s) pool=pool.filter(p=>p.name.toLowerCase().includes(s)||shortName(p.name).toLowerCase().includes(s)||(p.dept||'').toLowerCase().includes(s));
-      const score=p=>{ let n=0; if (role==='driver'||role==='supervisor'){ if(p.dept==='Banquet') n-=4; if(p.gdl) n-=2; } if (role==='chef'&&p.dept==='Kitchen') n-=4; if (role==='steward'&&p.dept==='Steward') n-=4; if (role==='server'&&p.dept==='Banquet') n-=2; if (busyOn(p.id,e.id).length) n+=1; return n; };
+      const score=p=>{ let n=0; if (s){ const sn=shortName(p.name).toLowerCase(); if (sn.startsWith(s)) n-=10; else if (p.name.toLowerCase().split(/\s+/).some(w=>w.startsWith(s))) n-=5; }
+        if (role==='driver'||role==='supervisor'){ if(p.dept==='Banquet') n-=4; if(p.gdl) n-=2; } if (role==='chef'&&p.dept==='Kitchen') n-=4; if (role==='steward'&&p.dept==='Steward') n-=4; if (role==='server'&&p.dept==='Banquet') n-=2; if (busyOn(p.id,e.id).length) n+=1; return n; };
       items=pool.sort((a,b)=>score(a)-score(b)||a.name.localeCompare(b.name)).slice(0,14); hi=0;
       dd.innerHTML = items.length ? items.map((p,i)=>{ const bz=busyNote(p.id,e.id); const cl=clashes(p.id,e,e.id); return `<div data-i="${i}" class="${i===hi?'hi':''}${bz?' busy':''}"><span class="nm">${esc(shortName(p.name))}</span><span style="font-size:12px;color:var(--muted)">${esc(p.name)}</span>${p.gdl?'<span class="gdl">GDL</span>':''}<span class="mt">${esc(p.dept)}${bz?` · <span class="bz">${cl?'⚠ clash ':'on '}${esc(bz)}</span>`:''}</span></div>`; }).join('') : '<div class="none">No match</div>';
       dd.hidden=false; };
