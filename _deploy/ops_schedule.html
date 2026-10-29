@@ -1,0 +1,786 @@
+<style>
+.ops{--bg:#f3f4f7;--surface:#fff;--fg:#1b2130;--muted:#5d6678;--line:#d9dde6;--accent:#1f3a5f;--accent-fg:#fff;--soft:#e9eef6;--dep:#f8e38f;--srv:#a9e7c0;--set:#dbe9ff;--clr:#eadcf7;--final:#1e7a4c;--final-bg:#e3f3ea;--draft:#9a6400;--draft-bg:#fbf0d4;--warn:#b3261e;--warn-bg:#fdecea;
+font-family:"Source Sans 3","Segoe UI",system-ui,sans-serif;font-size:15px;line-height:1.4;color:var(--fg);max-width:780px;margin:0 auto}
+.ops *{box-sizing:border-box}
+.ops h1{font-size:24px;font-weight:700;margin:0 0 8px}
+.ops .bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.ops .days{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;flex:1;min-width:0}
+.ops .day{flex:0 0 auto;min-width:58px;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:4px 8px;text-align:center;cursor:pointer;color:var(--fg);font:inherit;line-height:1.15}
+.ops .day small{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.ops .day b{font-size:18px}
+.ops .day.on{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)} .ops .day.on small{color:var(--accent-fg);opacity:.85}
+.ops .day .dot{display:block;width:6px;height:6px;border-radius:50%;margin:2px auto 0;background:transparent}
+.ops .day.has .dot{background:var(--draft)} .ops .day.has.fin .dot{background:var(--final)} .ops .day.on .dot{background:var(--accent-fg)}
+.ops input[type=date]{font:inherit;font-size:13px;padding:5px 7px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--fg)}
+.ops .sum{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0}
+.ops .sum h2{font-size:20px;font-weight:700;margin:0}
+.ops .chip{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase}
+.ops .chip.final{background:var(--final-bg);color:var(--final)} .ops .chip.draft{background:var(--draft-bg);color:var(--draft)} .ops .chip.none{background:var(--soft);color:var(--muted)}
+.ops .cnt{color:var(--muted);font-size:13px}
+.ops .acts{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.ops .btn{font:inherit;font-weight:600;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;padding:6px 12px;cursor:pointer}
+.ops .btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.ops .btn.sm{font-size:12px;padding:3px 9px}
+.ops .btn:disabled{opacity:.5;cursor:default}
+.ops h3{font-size:17px;font-weight:700;margin:18px 0 8px}
+.ops .cards{display:grid;gap:12px}
+.ops .card{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.ops .card.cancelled{opacity:.55}
+.ops .hd{display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--accent);color:var(--accent-fg)}
+.ops .hd .so{font-family:Menlo,Consolas,monospace;font-size:12px;opacity:.9;white-space:nowrap}
+.ops .hd .cl{font-weight:700;font-size:15px;flex:1;min-width:0}
+.ops .hd .pax{font-size:24px;font-weight:700;line-height:1;white-space:nowrap} .ops .hd .pax small{font-size:10px;font-weight:600;opacity:.85;margin-left:3px}
+.ops .hd .co{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:999px;background:#1e7a4c;color:#fff;white-space:nowrap}
+.ops .card.other{border-color:#1e7a4c;box-shadow:inset 3px 0 0 #1e7a4c}
+.ops .hd .st{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:999px;background:rgba(255,255,255,.18)}
+.ops .tl{display:flex;flex-wrap:wrap;gap:6px;padding:9px 14px;border-bottom:1px solid var(--line)}
+.ops .tl span{font-size:12px;font-weight:600;padding:4px 8px;border-radius:5px;color:#1b2130}
+.ops .tl .d{background:var(--dep)} .ops .tl .s{background:var(--srv)} .ops .tl .u{background:var(--set)} .ops .tl .c{background:var(--clr)}
+.ops .g{display:grid;grid-template-columns:1fr 1fr}
+.ops .cell{padding:8px 14px;border-bottom:1px solid var(--line);min-width:0}
+.ops .cell:nth-child(odd){border-right:1px solid var(--line)} .ops .cell.full{grid-column:1/-1;border-right:0}
+.ops .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:2px}
+.ops .v{font-weight:600} .ops .v.big{font-size:17px}
+.ops .typ{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ops .typ .btn.sm{white-space:nowrap}
+.ops .team{display:grid;gap:4px}
+.ops .team div{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.ops .team .r{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);min-width:78px}
+.ops .team .n{font-weight:600}
+.ops .flag{font-size:12px;color:var(--warn);background:var(--warn-bg);padding:2px 7px;border-radius:5px}
+.ops .conf{background:var(--warn-bg);border:1px solid #f1c2bd;border-radius:10px;padding:8px 12px;margin:0 0 10px;font-size:13px;color:var(--warn)}
+.ops .conf b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+.ops .ft{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 14px;font-size:12px;color:var(--muted)}
+.ops .ft .btn{font-size:12px;padding:4px 10px}
+.ops .edit{padding:12px 14px;border-top:1px solid var(--line);background:var(--soft);display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ops .edit label{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:block;margin-bottom:3px}
+.ops .edit input,.ops .edit select,.ops .edit textarea{width:100%;font:inherit;font-size:14px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--fg)}
+.ops .edit .full{grid-column:1/-1}
+.ops .edit .warn{font-size:12px;color:var(--warn);margin-top:3px}
+.ops .edit .lines{grid-column:1/-1;display:grid;gap:8px}
+.ops .edit .line{display:grid;grid-template-columns:90px 62px 1fr;gap:6px;align-items:start}
+.ops .edit .line .r{font-size:12px;font-weight:600;text-transform:capitalize;padding-top:8px}
+.ops .edit .line .pt{font-size:10px;color:var(--muted);text-transform:none;letter-spacing:0;margin:2px 0 0}
+.ops .edit .row{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end}
+/* people picker */
+.ops .pk{position:relative}
+.ops .pk .chips{display:flex;flex-wrap:wrap;gap:4px;align-items:center;min-height:36px;padding:4px 6px;border:1px solid var(--line);border-radius:7px;background:var(--surface);cursor:text}
+.ops .pk .chips:focus-within{box-shadow:0 0 0 2px rgba(31,58,95,.25)}
+.ops .pk .ch{display:inline-flex;align-items:center;gap:4px;background:var(--soft);border-radius:999px;padding:2px 6px 2px 9px;font-size:13px;font-weight:600;line-height:1.3}
+.ops .pk .ch.busy{background:var(--warn-bg);color:var(--warn)}
+.ops .pk .ch button{border:0;background:transparent;color:inherit;font-size:14px;line-height:1;cursor:pointer;padding:0 2px;opacity:.7}
+.ops .pk .ch button:hover{opacity:1}
+.ops .pk input.q{flex:1;min-width:110px;border:0 !important;padding:3px 4px !important;font-size:14px;background:transparent !important;outline:none}
+.ops .pk .dd{position:absolute;left:0;right:0;top:100%;z-index:20;background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:240px;overflow-y:auto;margin-top:3px}
+.ops .pk .dd div{padding:6px 10px;cursor:pointer;display:flex;gap:8px;align-items:baseline;font-size:14px}
+.ops .pk .dd div.hi,.ops .pk .dd div:hover{background:var(--soft)}
+.ops .pk .dd div.busy{color:var(--muted)}
+.ops .pk .dd .nm{font-weight:600} .ops .pk .dd .mt{font-size:11px;color:var(--muted);margin-left:auto;white-space:nowrap}
+.ops .pk .dd .gdl{font-size:10px;font-weight:700;background:var(--final-bg);color:var(--final);padding:1px 5px;border-radius:4px}
+.ops .pk .dd .bz{font-size:11px;color:var(--warn)}
+.ops .pk .dd .none{color:var(--muted);cursor:default}
+.ops .tbl{overflow-x:auto}
+.ops table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:13px}
+.ops th,.ops td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+.ops th{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--soft)}
+.ops tr:last-child td{border-bottom:0} .ops tr.cancelled td{opacity:.55}
+.ops td .btn{font-size:12px;padding:3px 9px}
+.ops .kitchen{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:2px 14px}
+.ops .kitchen .r{display:flex;gap:12px;padding:7px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.ops .kitchen .r:last-child{border-bottom:0}
+.ops .kitchen .t{font-family:Menlo,Consolas,monospace;font-size:12px;min-width:62px;color:var(--muted)}
+.ops .off{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:14px;color:var(--muted)} .ops .off b{color:var(--fg)}
+.ops .sheet{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.ops .sheet table{border-collapse:collapse;min-width:100%;font-size:12px;width:auto}
+.ops .sheet th,.ops .sheet td{border:1px solid var(--line);padding:4px 6px;vertical-align:middle;text-align:center;min-width:150px;background:var(--surface)}
+.ops .sheet .lbl{position:sticky;left:0;z-index:2;background:var(--soft) !important;font-weight:700;text-align:left;min-width:74px;width:74px;font-size:11px}
+.ops .sheet th.ord{background:#2c3e55 !important;color:#fff;font-family:Menlo,Consolas,monospace;font-weight:500}
+.ops .sheet th.ord.k{background:#c0392b !important}
+.ops .sheet th.ord.oc{background:#1e7a4c !important}
+.ops .sheet tr.ev td,.ops .sheet tr.loc td{background:#d6e6f5 !important}
+.ops .sheet tr.ev td{font-weight:700}
+.ops .sheet tr.st td{background:#dff1e3 !important}
+.ops .sheet tr.veh td{background:#fbf3c8 !important;font-weight:700}
+.ops .sheet tr.pax td{background:#fde9cf !important;font-weight:700;font-size:14px}
+.ops .sheet tr.typ td{background:#fde9cf !important;font-size:11px}
+.ops .sheet tr.gap td{background:#2c3e55 !important;height:6px;padding:0}
+.ops .sheet tr.hr td{height:26px;padding:2px 4px}
+.ops .sheet tr.hr td.lbl{font-family:Menlo,Consolas,monospace;font-weight:500}
+.ops .sheet tr.hr:nth-child(even) td:not(.lbl){background:#f7f8fb !important}
+.ops .sheet .blk{display:block;border-radius:4px;padding:3px 5px;font-weight:600;font-size:11px;line-height:1.2;color:#1b2130}
+.ops .sheet .blk.d{background:var(--dep)} .ops .sheet .blk.s{background:var(--srv)} .ops .sheet .blk.u{background:var(--set)} .ops .sheet .blk.c{background:var(--clr)} .ops .sheet .blk.k{background:#dbe9ff;text-align:left;font-weight:500}
+.ops .sheet td.ed{cursor:pointer} .ops .sheet td.ed:hover{box-shadow:inset 0 0 0 2px var(--accent)}
+.ops .sheet tr.off td{text-align:left;color:var(--warn);font-weight:700;background:var(--surface) !important}
+.ops.wide{max-width:1140px}
+.ops .vt{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.ops .vt button{font:inherit;font-size:12px;font-weight:600;padding:5px 10px;border:0;background:var(--surface);color:var(--fg);cursor:pointer}
+.ops .vt button.on{background:var(--accent);color:var(--accent-fg)}
+.ops .empty{background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:22px 16px;text-align:center;color:var(--muted)}
+.ops .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1b2130;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;max-width:90vw;text-align:center}
+.ops .toast.show{opacity:1}
+.ops textarea.wa{width:100%;font-family:Menlo,Consolas,monospace;font-size:12px;height:220px;border:1px solid var(--line);border-radius:8px;padding:8px;margin-top:8px;background:var(--surface);color:var(--fg)}
+@media (max-width:480px){.ops .g{grid-template-columns:1fr}.ops .cell:nth-child(odd){border-right:0}.ops .edit{grid-template-columns:1fr}.ops .edit .line{grid-template-columns:76px 56px 1fr}}
+</style>
+
+<div class="ops" id="opsApp">
+<h1>Ops Schedule</h1>
+<div class="bar">
+<div class="days" id="opsDays"></div>
+<input type="date" id="opsPick" aria-label="Jump to date">
+</div>
+<div class="sum">
+<h2 id="opsTitle"></h2>
+<span class="chip none" id="opsStatus">—</span>
+<span class="cnt" id="opsCount"></span>
+<div class="acts">
+<span class="vt"><button type="button" id="opsVCards">Cards</button><button type="button" id="opsVGrid">Timeline</button></span>
+<button class="btn" id="opsWa" type="button">WhatsApp text</button>
+<button class="btn pri" id="opsFinal" type="button" hidden>Mark day Final</button>
+</div>
+</div>
+<div id="opsConf"></div>
+<div id="opsBody"></div>
+<div id="opsWaBox" hidden><textarea class="wa" id="opsWaText" readonly></textarea></div>
+<div class="toast" id="opsToast"></div>
+</div>
+
+<script>
+(function(){
+/* =====================================================================
+   CONFIG — the only block you normally need to touch.
+   Staff, departments and skills come live from Odoo Employees:
+   resign / hire / change a skill in Odoo and this page follows.
+   ===================================================================== */
+const CFG = {
+  // Who can be PIC: everyone in these departments ...
+  pic_depts: ['Banquet'],
+  // ... plus people in this department whose job title matches the pattern (chefs + HOO, not helpers/stewards)
+  pic_extra: { dept: 'Kitchen', job: /chef|partie|operations|sous/i },
+  // Who appears in the team pickers (supervisor / servers / chefs / stewards / driver)
+  team_depts: ['Banquet','Kitchen','Steward'],
+  // Odoo skill that marks a GDL licence holder, and the minimum level (%) to count
+  gdl_skill: 'Driving (GDL) Safety', gdl_min: 50,
+  // Vehicles that need a GDL driver
+  lorries: ['BSH 1887','BRU 3231','WB 1270 Q','BMG 6016'],
+  // Minutes a person is still "busy" after an event's clear time (travel back / unload)
+  turnaround_min: 60,
+  // Game plan: event type -> Knowledge article URL (leave '' until the article exists).
+  // Example: banquet: '/knowledge/article/612'
+  gameplan: { banquet: '', buffet: '', canape: '', bento: '', bar: '', _default: '' },
+  // Short names for chips / briefing (Odoo holds full legal names). Anyone not here gets a first-name guess.
+  short: {
+    'Muhammad Farhan Bin Roslan':'Farhan','Muhammad Rejab Bin Naaim':'Rejab','Muhammad Rohaizad Bin Mohd Noor':'Rohaizad',
+    'Wan Ahmad Saifuddin Bin Mohammad':'Wan','Ahmad Amirul Zaid Bin Ahmad Nizam':'Amirul','Muhammad Anas Bin Abdul Hafiz':'Anas',
+    'Putera Amirul Shafiq Bin Sabri':'Putera','Muhammad Lokman Bin Rahim':'Lokman','Ammar Muhtadee Iman Bin Abdul Halim':'Amar Iman',
+    'Mohamad Abdul Zakwan Bin Mat Zaki':'Zakwan',"Muhammad Mu'izz Raof Bin Hisham":"Mu'izz",'Hirnane Bin Jun (Bun)':'Hirnane',
+    'Zakaria Khan':'Topu','Tan Zeng Han':'Han','Saw Xian Perng':'Perng','Guro Tharu Ramdev':'Ramdev','Wang Hoong Weng (Jeff)':'Jeff',
+    'Mohd Syazwan Shah Bin Hasbollah':'Syazwan','Ahmad Arif Bin Ahmad Nasir':'Arif','Md Asraful Islam':'Ashraful','MD Isha':'Isha'
+  }
+};
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null||s===false?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const rpc = (model, method, args, kwargs) => fetch('/web/dataset/call_kw/'+model+'/'+method, {method:'POST', headers:{'Content-Type':'application/json'},
+body: JSON.stringify({jsonrpc:'2.0', method:'call', params:{model, method, args, kwargs: kwargs||{}}})}).then(r=>r.json()).then(r=>{ if (r.error) throw new Error((r.error.data&&r.error.data.message)||r.error.message); return r.result; });
+const EVENT='x_event', LINE='x_event_line_833dc', STAGE='x_event_stage';
+const EFIELDS=['x_name','x_event_date','x_studio_stage_id','x_pax','x_vehicle','x_depart_time','x_serve_time','x_setup_time','x_clear_time','x_event_type','x_pic_id','x_so_id','x_customer_id','x_venue','x_studio_notes','x_equipment','x_event_line_ids_31587','x_odoo_changed','x_published_at','x_company'];
+const LFIELDS=['x_event_id','x_role','x_required','x_booked','x_employee_ids','x_source','x_flag','x_flag_note','x_gap','x_name','x_studio_sequence'];
+const ROLE_LABEL={supervisor:'Supervisor',server:'Servers',chef:'Chefs',steward:'Stewards',driver:'Driver',special:'Special',manpower:'Manpower'};
+let savedView='cards'; try{ savedView=localStorage.getItem('opsView')||'cards'; }catch(e){}
+const state={ view: savedView, cur: today(), canEdit:false, stages:{}, emp:{}, employees:[], picPool:[], teamPool:[], events:[], lines:{}, dayIndex:{}, busy:{} };
+
+function today(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function addDays(iso,n){ const d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function fmtDate(iso){ return new Date(iso+'T00:00:00').toLocaleDateString('en-MY',{weekday:'long',day:'numeric',month:'long',year:'numeric'}); }
+function hhmm(f){ if (f==null||f===false||f==='') return ''; const h=Math.floor(f), m=Math.round((f-h)*60); const ap=h>=12?'PM':'AM'; const h12=((h+11)%12)+1; return h12+':'+String(m).padStart(2,'0')+ap; }
+function toFloat(s){ if(!s) return false; const [h,m]=s.split(':').map(Number); return h+(m||0)/60; }
+function toInput(f){ if (f==null||f===false) return ''; const h=Math.floor(f), m=Math.round((f-h)*60); return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0'); }
+function stripHtml(h){ const d=document.createElement('div'); d.innerHTML=h||''; return d.textContent.trim(); }
+function toast(m){ const t=$('#opsToast'); t.textContent=m; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2600); }
+function shortName(full){ if(!full) return ''; if (CFG.short[full]) return CFG.short[full]; const p=full.replace(/\s*\(.*?\)\s*/g,' ').trim().split(/\s+/); if (/^(muhammad|mohammad|mohamad|mohd|md|ahmad|wan|nur|nurul|siti)$/i.test(p[0]) && p[1]) return p[1]; return p[0]; }
+const soOf = e => e.x_so_id ? e.x_so_id[1].split(' ')[0] : (e.x_name||'');
+const empName = id => (state.emp[id]&&state.emp[id].name) || ('#'+id);
+
+/* ---------- employees + skills from Odoo ---------- */
+async function loadEmployees(){
+  // hr.employee.public is readable by every internal user (same ids as hr.employee)
+  const emps = await rpc('hr.employee.public','search_read',[[['department_id.name','in',[...new Set([...CFG.team_depts, ...CFG.pic_depts, CFG.pic_extra.dept])]]]],{fields:['name','department_id','job_title'],order:'name'});
+  state.emp={}; emps.forEach(e=>{ state.emp[e.id]={id:e.id,name:e.name,dept:e.department_id?e.department_id[1]:'',job:e.job_title||'',skills:{},gdl:false}; });
+  try {
+    const sk = await rpc('hr.employee.skill','search_read',[[['employee_id','in',emps.map(e=>e.id)]]],{fields:['employee_id','skill_id','level_progress']});
+    sk.forEach(s=>{ const E=state.emp[s.employee_id[0]]; if(!E) return; const n=s.skill_id[1]; E.skills[n]=Math.max(E.skills[n]||0, s.level_progress||0); if (n===CFG.gdl_skill && (s.level_progress||0)>=CFG.gdl_min) E.gdl=true; });
+  } catch(e){ console.warn('skills not readable', e); }
+  state.employees = Object.values(state.emp);
+  state.teamPool = state.employees.filter(e=>CFG.team_depts.includes(e.dept));
+  state.picPool = state.employees.filter(e=>CFG.pic_depts.includes(e.dept) || (e.dept===CFG.pic_extra.dept && CFG.pic_extra.job.test(e.job)));
+}
+
+async function init(){
+try { state.canEdit = await rpc(EVENT,'check_access_rights',['write'],{raise_exception:false}); } catch(e){ state.canEdit=false; }
+const st = await rpc(STAGE,'search_read',[[]],{fields:['x_name']}); st.forEach(s=>state.stages[s.x_name]=s.id);
+try { await loadEmployees(); } catch(e){ console.warn('employees not readable', e); }
+$('#opsPick').value = state.cur;
+$('#opsPick').onchange = e => { if (e.target.value){ state.cur=e.target.value; load(); } };
+$('#opsFinal').onclick = toggleFinal;
+$('#opsWa').onclick = showWa;
+const setView = v => { state.view=v; try{ localStorage.setItem('opsView',v); }catch(e){} render(); };
+$('#opsVCards').onclick = () => setView('cards'); $('#opsVGrid').onclick = () => setView('grid');
+await load();
+}
+async function load(){
+const from = addDays(state.cur,-1), to = addDays(state.cur,14);
+const evs = await rpc(EVENT,'search_read',[[['x_event_date','>=',from],['x_event_date','<=',to]]],{fields:EFIELDS,order:'x_event_date, x_depart_time, x_serve_time'});
+state.dayIndex={}; evs.forEach(e=>{ const k=e.x_event_date; state.dayIndex[k]=state.dayIndex[k]||{n:0,fin:0}; if (stageName(e)!=='Cancelled'){ state.dayIndex[k].n++; if (stageName(e)==='Published') state.dayIndex[k].fin++; } });
+state.events = evs.filter(e=>e.x_event_date===state.cur);
+state.day = null; try { const dr = await rpc('x_ops_day','search_read',[[['x_name','=',state.cur]]],{fields:['x_kitchen_plan','x_off_kitchen','x_off_banquet','x_notes'],limit:1}); state.day = dr[0]||null; } catch(e){}
+const lineIds = state.events.flatMap(e=>e.x_event_line_ids_31587||[]);
+state.lines={};
+if (lineIds.length){ const ls = await rpc(LINE,'search_read',[[['id','in',lineIds]]],{fields:LFIELDS,order:'x_studio_sequence, id'});
+ls.forEach(l=>{ const eid=l.x_event_id?l.x_event_id[0]:0; (state.lines[eid]=state.lines[eid]||[]).push(l); l.x_employee_ids_names=(l.x_employee_ids||[]).map(empName); }); }
+buildBusy();
+render();
+}
+function stageName(e){ return e.x_studio_stage_id ? e.x_studio_stage_id[1] : 'Draft'; }
+
+/* ---------- who is already on which event today (soft block) ---------- */
+function span(e){ const from=e.x_depart_time||e.x_setup_time||e.x_serve_time||0; const to=(e.x_clear_time||e.x_serve_time||from)+CFG.turnaround_min/60; return [from,to]; }
+function buildBusy(){
+  state.busy={};
+  state.events.filter(e=>stageName(e)!=='Cancelled').forEach(e=>{ const [from,to]=span(e);
+    const add=(id,role)=>{ if(!id) return; (state.busy[id]=state.busy[id]||[]).push({eid:e.id,so:soOf(e),role,from,to}); };
+    if (e.x_pic_id) add(e.x_pic_id[0],'PIC');
+    (state.lines[e.id]||[]).forEach(l=>(l.x_employee_ids||[]).forEach(id=>add(id,ROLE_LABEL[l.x_role]||l.x_role))); });
+}
+function busyOn(id, excludeEid){ return (state.busy[id]||[]).filter(b=>b.eid!==excludeEid); }
+function busyNote(id, excludeEid){ const b=busyOn(id,excludeEid); if(!b.length) return ''; const seen={}; return b.filter(x=>{ const k=x.eid; if(seen[k]) return false; seen[k]=1; return true; }).map(x=>x.so+' '+hhmm(x.from)+'–'+hhmm(x.to-CFG.turnaround_min/60)).join(', '); }
+function clashes(id, e, excludeEid){ const [f,t]=span(e); return busyOn(id,excludeEid).some(b=>b.from<t && f<b.to); }
+function conflictsHtml(){
+  const out=[]; const seen={};
+  Object.keys(state.busy).forEach(id=>{ const b=state.busy[id]; const evs=[...new Set(b.map(x=>x.eid))]; if (evs.length<2) return;
+    const over = evs.some((a,i)=>evs.slice(i+1).some(c=>{ const A=state.events.find(x=>x.id===a), C=state.events.find(x=>x.id===c); if(!A||!C) return false; const [af,at]=span(A),[cf,ct]=span(C); return af<ct && cf<at; }));
+    const k=shortName(empName(+id))+' → '+[...new Set(b.map(x=>x.so))].join(' + '); if(seen[k]) return; seen[k]=1; out.push((over?'⚠ ':'')+k+(over?' (times overlap)':'')); });
+  state.events.filter(e=>stageName(e)!=='Cancelled').forEach(e=>{ const isLorry=CFG.lorries.includes(String(e.x_vehicle||'').trim()); if(!isLorry) return;
+    const drv=(state.lines[e.id]||[]).filter(l=>l.x_role==='driver').flatMap(l=>l.x_employee_ids||[]); const ids=drv.length?drv:(e.x_pic_id?[e.x_pic_id[0]]:[]);
+    if (ids.length && !ids.some(id=>state.emp[id]&&state.emp[id].gdl)) out.push('⚠ '+soOf(e)+' '+e.x_vehicle+' — no GDL driver ('+ids.map(id=>shortName(empName(id))).join(', ')+')'); });
+  return out.length ? `<div class="conf"><b>Check</b>${out.map(esc).join('<br>')}</div>` : '';
+}
+
+function renderDays(){
+const base = today(); let h='';
+for (let i=0;i<7;i++){ const k=addDays(base,i); const d=new Date(k+'T00:00:00'); const ix=state.dayIndex[k]; const has=ix&&ix.n>0; const fin=has&&ix.fin===ix.n;
+h += `<button class="day${k===state.cur?' on':''}${has?' has':''}${fin?' fin':''}" data-k="${k}" type="button"><small>${d.toLocaleDateString('en-MY',{weekday:'short'})}</small><b>${d.getDate()}</b><span class="dot"></span></button>`; }
+if (state.cur < base || state.cur > addDays(base,6)) { const d=new Date(state.cur+'T00:00:00'); h += `<button class="day on" data-k="${state.cur}" type="button"><small>${d.toLocaleDateString('en-MY',{weekday:'short'})} ${d.toLocaleDateString('en-MY',{month:'short'})}</small><b>${d.getDate()}</b><span class="dot"></span></button>`; }
+$('#opsDays').innerHTML=h;
+$('#opsDays').querySelectorAll('.day').forEach(b=>b.onclick=()=>{ state.cur=b.dataset.k; $('#opsPick').value=state.cur; load(); });
+}
+function teamHtml(eid){
+const ls=(state.lines[eid]||[]);
+if (!ls.length) return '<span class="v">—</span>';
+return '<div class="team">'+ls.map(l=>{ const names=(l.x_employee_ids_names||[]).join(', '); const cnt=l.x_booked||0; const req=l.x_required||0;
+return `<div><span class="r">${ROLE_LABEL[l.x_role]||l.x_role}</span><span class="n">${esc(names||(cnt+(l.x_role==='server'||l.x_role==='steward'||l.x_role==='chef'?' PT':'')))}${names&&cnt>names.split(',').length?` + ${cnt-names.split(',').length} PT`:''}</span>${l.x_flag?`<span class="flag">${esc(l.x_flag_note||'check')}</span>`:(req&&cnt<req?`<span class="flag">short ${req-cnt}</span>`:'')}</div>`; }).join('')+'</div>';
+}
+
+const HOURS = [3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24];
+const hl = h => h===24 ? '12am>' : (h%12||12)+(h<12?'am':'pm');
+function gridHtml(){
+const evs = state.events.filter(e=>stageName(e)!=='Cancelled').slice().sort((a,b)=>(a.x_depart_time||99)-(b.x_depart_time||99));
+const kit = {}; if (state.day && state.day.x_kitchen_plan) String(state.day.x_kitchen_plan).split('\n').forEach(l=>{ const m=l.match(/^(\d{1,2}):(\d{2})\s+(.*)$/); if(m) kit[+m[1]] = (kit[+m[1]]?kit[+m[1]]+' · ':'')+m[3]; });
+const team = (e,role) => { const l=(state.lines[e.id]||[]).find(x=>x.x_role===role); if(!l) return ''; const n=(l.x_employee_ids_names||[]).join(', '); const b=l.x_booked||0; return n ? (b>n.split(',').length ? n+' + '+(b-n.split(',').length)+' PT' : n) : (b?b+' PT':''); };
+const so = e => esc(soOf(e));
+const short = n => n ? esc(String(n).split(' ').slice(0,2).join(' ')) : '—';
+let h = '<tr><th class="lbl">Sales order:</th><th class="ord k">KITCHEN</th>'+evs.map(e=>'<th class="ord'+(otherCo(e)?' oc':'')+'">'+so(e)+(otherCo(e)?'<br><small>'+esc(otherCo(e))+'</small>':'')+'</th>').join('')+'</tr>';
+const row = (cls,label,fn,ed) => '<tr class="'+cls+'"><td class="lbl">'+label+'</td><td></td>'+evs.map(e=>'<td'+(ed&&state.canEdit?' class="ed" data-edit="'+e.id+'" title="Click to edit"':'')+'>'+fn(e)+'</td>').join('')+'</tr>';
+h += row('ev','Event:',e=>esc(e.x_customer_id?e.x_customer_id[1]:e.x_name)+'<br><span style="font-weight:400">'+esc(e.x_name)+'</span>');
+h += row('loc','Location:',e=>esc(String(e.x_venue||'').split(',').slice(0,3).join(',').slice(0,70)));
+h += row('st','PIC:',e=>'<b>'+short(e.x_pic_id?e.x_pic_id[1]:(isDelivery(e)?e.x_vehicle:''))+'</b>',true);
+h += row('st','Support:',e=>esc(team(e,'server')||team(e,'manpower')||'—'),true);
+h += row('st','Chef:',e=>esc(team(e,'chef')||'—'),true);
+h += row('veh','Vehicle:',e=>esc(e.x_vehicle||'—'),true);
+h += row('pax','Pax:',e=>esc(e.x_pax||''));
+h += row('typ','Type:',e=>esc(e.x_event_type||'')+(gameplanUrl(e)?' <a href="'+esc(gameplanUrl(e))+'" target="_blank" rel="noopener">game plan</a>':''));
+h += '<tr class="gap"><td class="lbl" style="background:#2c3e55 !important"></td><td colspan="'+(evs.length+1)+'"></td></tr>';
+HOURS.forEach(hr=>{
+h += '<tr class="hr"><td class="lbl">'+hl(hr)+'</td><td>'+(kit[hr]?'<span class="blk k">'+esc(kit[hr])+'</span>':'')+'</td>';
+evs.forEach(e=>{ const b=[]; const at=(t,cls,txt)=>{ if(t!=null&&t!==false&&Math.floor(t)===hr) b.push('<span class="blk '+cls+'">'+txt+' '+hhmm(t)+'</span>'); };
+at(e.x_depart_time,'d',isDelivery(e)?'Pickup':'Depart'); at(e.x_setup_time,'u','Setup'); at(e.x_serve_time,'s',isDelivery(e)?'Deliver':'Serve'); at(e.x_clear_time,'c','Clear');
+h += '<td'+(state.canEdit?' class="ed" data-edit="'+e.id+'"':'')+'>'+b.join('')+'</td>'; });
+h += '</tr>'; });
+const dy=state.day; if (dy && (dy.x_off_banquet||dy.x_off_kitchen)) h += '<tr class="off"><td class="lbl"></td><td colspan="'+(evs.length+1)+'">OFF — Banquet: '+esc(dy.x_off_banquet||'—')+' &nbsp;·&nbsp; Kitchen: '+esc(dy.x_off_kitchen||'—')+'</td></tr>';
+return '<div class="sheet"><table>'+h+'</table></div><div class="cards" id="opsDelCards" style="margin-top:12px"></div>';
+}
+const HOME_CO = 'JR Success Group Sdn Bhd';
+const otherCo = e => (e.x_company && e.x_company !== HOME_CO) ? e.x_company.replace(/ Sdn\.? Bhd\.?$/i,'').replace(/ Solutions$/i,'') : '';
+
+/* ---------- game plan + briefing ---------- */
+function gameplanUrl(e){ const t=String(e.x_event_type||'').toLowerCase(); return CFG.gameplan[t] || CFG.gameplan._default || ''; }
+function briefingText(e){
+  const ls=state.lines[e.id]||[]; const names=r=>ls.filter(l=>l.x_role===r).flatMap(l=>l.x_employee_ids_names||[]).map(shortName);
+  const pt=ls.filter(l=>['server','chef','steward','manpower','special'].includes(l.x_role)).reduce((n,l)=>n+Math.max((l.x_booked||l.x_required||0)-(l.x_employee_ids||[]).length,0),0);
+  const t=[]; if(e.x_depart_time) t.push('Depart '+hhmm(e.x_depart_time)); if(e.x_setup_time) t.push('Setup '+hhmm(e.x_setup_time)); if(e.x_serve_time) t.push('Serve '+hhmm(e.x_serve_time)); if(e.x_clear_time) t.push('Clear '+hhmm(e.x_clear_time));
+  let s=`*BRIEFING — ${fmtDate(state.cur).toUpperCase()}*\n${e.x_customer_id?e.x_customer_id[1]:e.x_name} · ${(e.x_event_type||'').toUpperCase()} ${e.x_pax||'?'} pax\n`;
+  if (e.x_venue) s+=`📍 ${e.x_venue}\n`;
+  if (t.length) s+=`🕒 ${t.join(' → ')}\n`;
+  s+=`PIC: ${e.x_pic_id?shortName(e.x_pic_id[1]):'-'}`; const sup=names('supervisor'); if(sup.length) s+=` · Supervisor: ${sup.join(', ')}`; s+='\n';
+  const srv=names('server'), chf=names('chef'), stw=names('steward'); if(srv.length) s+=`Servers: ${srv.join(', ')}\n`; if(chf.length) s+=`Chefs: ${chf.join(', ')}\n`; if(stw.length) s+=`Stewards: ${stw.join(', ')}\n`;
+  if (pt) s+=`Part-timers: ${pt}\n`;
+  const n=stripHtml(e.x_studio_notes); if(n) s+=`Note: ${n}\n`;
+  const gp=gameplanUrl(e); if (gp) s+=`\n📘 Game plan / SOP: ${gp.startsWith('http')?gp:location.origin+gp}\n`;
+  return s.trim();
+}
+function copyText(s, okMsg){ (navigator.clipboard?navigator.clipboard.writeText(s):Promise.reject()).then(()=>toast(okMsg||'Copied.')).catch(()=>{ $('#opsWaText').value=s; $('#opsWaBox').hidden=false; $('#opsWaText').focus(); $('#opsWaText').select(); toast('Select the text and copy it.'); }); }
+
+function card(e){
+const st=stageName(e); const chips=[];
+if (e.x_depart_time) chips.push(['d','Depart '+hhmm(e.x_depart_time)]);
+if (e.x_setup_time) chips.push(['u','Setup '+hhmm(e.x_setup_time)]);
+if (e.x_serve_time) chips.push(['s','Serve '+hhmm(e.x_serve_time)]);
+if (e.x_clear_time) chips.push(['c','Clear '+hhmm(e.x_clear_time)]);
+const notes=stripHtml(e.x_studio_notes);
+const co = otherCo(e); const gp=gameplanUrl(e);
+return `<article class="card${st==='Cancelled'?' cancelled':''}${co?' other':''}" data-id="${e.id}">
+<div class="hd"><span class="so">${esc(soOf(e))}</span>${co?`<span class="co">${esc(co)}</span>`:''}<span class="cl">${esc(e.x_customer_id?e.x_customer_id[1]:e.x_name)}</span><span class="st">${st==='Published'?'Final':st}</span><span class="pax">${esc(e.x_pax||'')}<small>PAX</small></span></div>
+${chips.length?`<div class="tl">${chips.map(([c,t])=>`<span class="${c}">${esc(t)}</span>`).join('')}</div>`:''}
+<div class="g">
+<div class="cell full"><div class="k">Event · Venue</div><div class="v">${esc(e.x_name)}${e.x_venue?' · '+esc(e.x_venue):''}</div></div>
+<div class="cell"><div class="k">PIC</div><div class="v big">${esc(e.x_pic_id?e.x_pic_id[1]:'—')}</div></div>
+<div class="cell"><div class="k">Vehicle</div><div class="v big">${esc(e.x_vehicle||'—')}</div></div>
+<div class="cell full"><div class="k">Team</div>${teamHtml(e.id)}</div>
+<div class="cell"><div class="k">Type</div><div class="typ"><span class="v">${esc(e.x_event_type||'')}</span>${gp?`<a class="btn sm" href="${esc(gp)}" target="_blank" rel="noopener">📘 Game plan</a>`:`<button class="btn sm" type="button" data-gp="${e.id}" title="No game plan set for this type yet">📘 Game plan</button>`}<button class="btn sm" type="button" data-brief="${e.id}">Copy briefing</button></div></div>
+<div class="cell"><div class="k">Equipment</div><div class="v">${esc(e.x_equipment||'—')}</div></div>
+${notes?`<div class="cell full"><div class="k">Notes</div><div class="v">${esc(notes)}</div></div>`:''}
+${e.x_odoo_changed?`<div class="cell full"><span class="flag">Sales order changed in Odoo after this was planned</span></div>`:''}
+</div>
+${state.canEdit?`<div class="ft"><span>${st==='Published'?'Final':'Draft — tap Edit to adjust'}</span><button class="btn" type="button" data-edit="${e.id}">Edit</button></div>`:''}
+</article>`;
+}
+function render(){
+renderDays();
+$('#opsTitle').textContent = fmtDate(state.cur);
+const live = state.events.filter(e=>stageName(e)!=='Cancelled');
+const fin = live.length && live.every(e=>stageName(e)==='Published');
+const stEl=$('#opsStatus'); stEl.textContent = !live.length?'No schedule':(fin?'Final':'Draft'); stEl.className='chip '+(!live.length?'none':(fin?'final':'draft'));
+$('#opsCount').textContent = live.length?`${live.length} event${live.length!==1?'s':''}`:'';
+$('#opsFinal').hidden = !(state.canEdit && live.length); $('#opsFinal').textContent = fin?'Reopen as Draft':'Mark day Final';
+$('#opsWaBox').hidden = true;
+$('#opsConf').innerHTML = conflictsHtml();
+if (!state.events.length){ $('#opsBody').innerHTML = `<div class="empty">No schedule for this date yet.<br>The planner runs every night for the next 7 days. For a date further out, ask for it to be planned ahead.</div>` + (state.view==='grid' ? '' : bodyHtml()); return; }
+$('#opsBody').innerHTML = bodyHtml();
+// names for people outside the loaded pool (e.g. archived employee still on a line)
+const missing=[...new Set(Object.values(state.lines).flat().flatMap(l=>l.x_employee_ids||[]).filter(id=>!state.emp[id]))];
+if (missing.length) rpc('hr.employee.public','read',[missing,['name']]).then(emps=>{ emps.forEach(x=>{ state.emp[x.id]={id:x.id,name:x.name,dept:'',job:'',skills:{},gdl:false}; }); Object.values(state.lines).flat().forEach(l=>l.x_employee_ids_names=(l.x_employee_ids||[]).map(empName)); $('#opsBody').innerHTML = bodyHtml(); bind(); }).catch(()=>{});
+bind();
+}
+const isDelivery = e => e.x_event_type==='bento' || /lalamove|grab|courier|delivery/i.test(e.x_vehicle||'') || /drop[ -]?off|food drop/i.test(e.x_equipment||'') || /packed food|bento|drop[ -]?off/i.test(e.x_name||'');
+function bodyHtml(){
+$('#opsVCards').classList.toggle('on', state.view!=='grid'); $('#opsVGrid').classList.toggle('on', state.view==='grid');
+document.getElementById('opsApp').classList.toggle('wide', state.view==='grid');
+if (state.view==='grid') return gridHtml();
+const evs = state.events.filter(e=>!isDelivery(e)), dels = state.events.filter(isDelivery);
+let h = evs.length ? `<h3>Banquet · Events</h3><div class="cards">${evs.map(card).join('')}</div>` : '';
+if (dels.length) h += `<h3>Deliveries</h3><div class="tbl"><table><thead><tr><th>Order</th><th>Client</th><th>Deliver to</th><th>Pax</th><th>Timing</th><th>Vehicle</th>${state.canEdit?'<th></th>':''}</tr></thead><tbody>`+
+dels.map(e=>`<tr class="${stageName(e)==='Cancelled'?'cancelled':''}"><td>${esc(soOf(e))}${otherCo(e)?` <span class="co" style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:999px;background:#1e7a4c;color:#fff">${esc(otherCo(e))}</span>`:''}</td><td>${esc(e.x_customer_id?e.x_customer_id[1]:e.x_name)}</td><td>${esc(e.x_venue||'')}</td><td>${esc(e.x_pax||'')}</td><td>${[e.x_depart_time?'pickup '+hhmm(e.x_depart_time):'', e.x_serve_time?'deliver by '+hhmm(e.x_serve_time):''].filter(Boolean).join(' · ')}</td><td>${esc(e.x_vehicle||'')}</td>${state.canEdit?`<td><button class="btn" type="button" data-edit="${e.id}">Edit</button></td>`:''}</tr>`).join('')+
+`</tbody></table></div><div class="cards" id="opsDelCards"></div>`;
+const chefs = []; state.events.forEach(e=>{ (state.lines[e.id]||[]).filter(l=>l.x_role==='chef' && (l.x_booked||l.x_required)).forEach(l=>chefs.push({e,l})); });
+if (chefs.length) h += `<h3>Kitchen · chefs on site</h3><div class="kitchen">`+chefs.map(({e,l})=>`<div class="r"><span class="t">${hhmm(e.x_depart_time)||'—'}</span><span><b>${esc(soOf(e))}</b> ${esc(e.x_customer_id?e.x_customer_id[1]:e.x_name)} · ${esc((l.x_employee_ids_names||[]).join(', ')||((l.x_booked||l.x_required)+' chef'+((l.x_booked||l.x_required)>1?'s':'')))}${l.x_flag?` <span class="flag">${esc(l.x_flag_note||'check')}</span>`:''}</span></div>`).join('')+`</div>`;
+const dy = state.day;
+if (dy && dy.x_kitchen_plan) h += `<h3>Kitchen</h3><div class="kitchen">`+String(dy.x_kitchen_plan).split('\n').filter(Boolean).map(line=>{ const m=line.match(/^(\d{1,2}:\d{2})\s+(.*)$/); return `<div class="r"><span class="t">${esc(m?m[1]:'')}</span><span>${esc(m?m[2]:line)}</span></div>`; }).join('')+`</div>`;
+if (dy && (dy.x_off_banquet||dy.x_off_kitchen)) h += `<div class="off">${dy.x_off_banquet?`<span><b>Off · Banquet</b> ${esc(dy.x_off_banquet)}</span>`:''}${dy.x_off_kitchen?`<span><b>Off · Kitchen</b> ${esc(dy.x_off_kitchen)}</span>`:''}</div>`;
+if (dy && dy.x_notes) h += `<div class="off"><span><b>Day notes</b> ${esc(dy.x_notes)}</span></div>`;
+return h;
+}
+function bind(){
+  $('#opsBody').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openEdit(+b.dataset.edit));
+  $('#opsBody').querySelectorAll('[data-brief]').forEach(b=>b.onclick=()=>{ const e=state.events.find(x=>x.id===+b.dataset.brief); if(e) copyText(briefingText(e),'Briefing copied — paste into the part-timer group.'); });
+  $('#opsBody').querySelectorAll('[data-gp]').forEach(b=>b.onclick=()=>{ const e=state.events.find(x=>x.id===+b.dataset.gp); toast('No game plan set for "'+(e&&e.x_event_type||'this type')+'" yet — add the Knowledge article URL in CFG.gameplan.'); });
+}
+
+/* ---------- people picker (search + chips) ---------- */
+function pickerHtml(lineId, role, selected){
+  return `<div class="pk" data-pk="${lineId}" data-role="${esc(role)}"><div class="chips">${selected.map(chipHtml).join('')}<input class="q" type="text" placeholder="Type a name…" autocomplete="off"></div><div class="dd" hidden></div></div>`;
+}
+function chipHtml(id){ return `<span class="ch" data-id="${id}">${esc(shortName(empName(id)))}<button type="button" aria-label="remove">×</button></span>`; }
+function initPickers(form, e, sel){
+  form.querySelectorAll('.pk').forEach(pk=>{
+    const lineId=+pk.dataset.pk, role=pk.dataset.role; const q=pk.querySelector('.q'), dd=pk.querySelector('.dd'), chips=pk.querySelector('.chips');
+    const refresh=()=>{ chips.querySelectorAll('.ch').forEach(c=>c.remove()); sel[lineId].slice().reverse().forEach(id=>{ chips.insertAdjacentHTML('afterbegin',chipHtml(id)); }); chips.querySelectorAll('.ch').forEach(c=>{ if (clashes(+c.dataset.id,e,e.id)) c.classList.add('busy'); }); syncCount(); };
+    const syncCount=()=>{ const n=form.querySelector(`[name="booked_${lineId}"]`); if(n && +n.value<sel[lineId].length) n.value=sel[lineId].length; };
+    let hi=0, items=[];
+    const list=()=>{ const s=q.value.trim().toLowerCase();
+      let pool=state.teamPool.filter(p=>!sel[lineId].includes(p.id));
+      if (s) pool=pool.filter(p=>p.name.toLowerCase().includes(s)||shortName(p.name).toLowerCase().includes(s)||(p.dept||'').toLowerCase().includes(s));
+      const score=p=>{ let n=0; if (role==='driver'||role==='supervisor'){ if(p.dept==='Banquet') n-=4; if(p.gdl) n-=2; } if (role==='chef'&&p.dept==='Kitchen') n-=4; if (role==='steward'&&p.dept==='Steward') n-=4; if (role==='server'&&p.dept==='Banquet') n-=2; if (busyOn(p.id,e.id).length) n+=1; return n; };
+      items=pool.sort((a,b)=>score(a)-score(b)||a.name.localeCompare(b.name)).slice(0,14); hi=0;
+      dd.innerHTML = items.length ? items.map((p,i)=>{ const bz=busyNote(p.id,e.id); const cl=clashes(p.id,e,e.id); return `<div data-i="${i}" class="${i===hi?'hi':''}${bz?' busy':''}"><span class="nm">${esc(shortName(p.name))}</span><span style="font-size:12px;color:var(--muted)">${esc(p.name)}</span>${p.gdl?'<span class="gdl">GDL</span>':''}<span class="mt">${esc(p.dept)}${bz?` · <span class="bz">${cl?'⚠ clash ':'on '}${esc(bz)}</span>`:''}</span></div>`; }).join('') : '<div class="none">No match</div>';
+      dd.hidden=false; };
+    const pick=i=>{ const p=items[i]; if(!p) return; sel[lineId].push(p.id); q.value=''; refresh(); dd.hidden=true;
+      if (clashes(p.id,e,e.id)) toast('⚠ '+shortName(p.name)+' is already on '+busyNote(p.id,e.id)+' — times overlap. Saved anyway if you keep it.');
+      else if (busyOn(p.id,e.id).length) toast(shortName(p.name)+' is also on '+busyNote(p.id,e.id)+' today.');
+      if (role==='driver' && CFG.lorries.includes(String(form.querySelector('[name=vehicle]').value||'').trim()) && !p.gdl) toast('⚠ '+shortName(p.name)+' has no GDL on record — lorry needs a GDL driver.');
+      q.focus(); };
+    q.addEventListener('focus', list); q.addEventListener('input', list);
+    q.addEventListener('keydown', ev=>{ if (dd.hidden && ev.key!=='Backspace') return;
+      if (ev.key==='ArrowDown'){ ev.preventDefault(); hi=Math.min(hi+1,items.length-1); dd.querySelectorAll('div[data-i]').forEach(d=>d.classList.toggle('hi',+d.dataset.i===hi)); }
+      else if (ev.key==='ArrowUp'){ ev.preventDefault(); hi=Math.max(hi-1,0); dd.querySelectorAll('div[data-i]').forEach(d=>d.classList.toggle('hi',+d.dataset.i===hi)); }
+      else if (ev.key==='Enter'){ ev.preventDefault(); pick(hi); }
+      else if (ev.key==='Escape'){ dd.hidden=true; }
+      else if (ev.key==='Backspace' && !q.value && sel[lineId].length){ sel[lineId].pop(); refresh(); } });
+    q.addEventListener('blur', ()=>setTimeout(()=>{ dd.hidden=true; },150));
+    dd.addEventListener('mousedown', ev=>{ const d=ev.target.closest('div[data-i]'); if(d){ ev.preventDefault(); pick(+d.dataset.i); } });
+    chips.addEventListener('click', ev=>{ const b=ev.target.closest('button'); if(b){ const id=+b.parentElement.dataset.id; sel[lineId]=sel[lineId].filter(x=>x!==id); refresh(); return; } q.focus(); });
+    refresh();
+  });
+}
+
+function openEdit(id){
+const e=state.events.find(x=>x.id===id); if(!e) return;
+let art=$(`.card[data-id="${id}"]`);
+if(!art){ const holder=$('#opsDelCards'); if(!holder) return; holder.innerHTML=card(e); art=$(`.card[data-id="${id}"]`); }
+if(art.querySelector('form')) return;
+const curPic=e.x_pic_id?e.x_pic_id[0]:null;
+const picList=state.picPool.slice(); if (curPic && !picList.some(p=>p.id===curPic)) picList.unshift(state.emp[curPic]||{id:curPic,name:e.x_pic_id[1],gdl:false});
+const picOpt = picList.map(p=>{ const bz=busyNote(p.id,id); const cl=clashes(p.id,e,id); return `<option value="${p.id}"${curPic===p.id?' selected':''}>${esc(shortName(p.name))} — ${esc(p.name)}${p.gdl?' ✓GDL':''}${bz?(cl?' ⚠ clash: ':' · on ')+esc(bz):''}</option>`; }).join('');
+const ls=state.lines[id]||[]; const sel={}; ls.forEach(l=>{ sel[l.id]=(l.x_employee_ids||[]).slice(); });
+art.insertAdjacentHTML('beforeend', `<form class="edit">
+<div><label>PIC</label><select name="pic"><option value="">—</option>${picOpt}</select><div class="warn" data-picwarn></div></div>
+<div><label>Vehicle</label><input name="vehicle" value="${esc(e.x_vehicle||'')}" list="opsVeh"><datalist id="opsVeh">${CFG.lorries.map(v=>`<option value="${esc(v)}">`).join('')}<option value="WXM 2232"><option value="WA 1246 F"><option value="VBA 7849"><option value="Lalamove"></datalist></div>
+<div><label>Depart</label><input type="time" name="depart" step="300" value="${toInput(e.x_depart_time)}"></div>
+<div><label>Setup</label><input type="time" name="setup" step="300" value="${toInput(e.x_setup_time)}"></div>
+<div><label>Serve</label><input type="time" name="serve" step="300" value="${toInput(e.x_serve_time)}"></div>
+<div><label>Clear</label><input type="time" name="clear" step="300" value="${toInput(e.x_clear_time)}"></div>
+<div class="lines"><label>Team — type a name to add; number = total booked incl. part-timers</label>${ls.map(l=>`<div class="line" data-line="${l.id}"><span class="r">${ROLE_LABEL[l.x_role]||l.x_role}<div class="pt">need ${l.x_required||0}</div></span><input type="number" min="0" name="booked_${l.id}" value="${l.x_booked||0}" aria-label="booked">${pickerHtml(l.id,l.x_role,sel[l.id])}</div>`).join('')}</div>
+<div class="full"><label>Notes</label><textarea name="notes" rows="2">${esc(stripHtml(e.x_studio_notes))}</textarea></div>
+<div class="row"><button class="btn" type="button" data-cancel>Cancel</button><button class="btn pri" type="submit">Save</button></div>
+</form>`);
+const f=art.querySelector('form'); art.querySelector('.ft').hidden=true;
+initPickers(f,e,sel);
+const picSel=f.querySelector('[name=pic]'), picWarn=f.querySelector('[data-picwarn]');
+const checkPic=()=>{ const pid=+picSel.value; if(!pid){ picWarn.textContent=''; return; } const bz=busyNote(pid,id); const cl=clashes(pid,e,id); const p=state.emp[pid];
+  const w=[]; if (bz) w.push((cl?'⚠ Times overlap — ':'')+shortName(empName(pid))+' is already on '+bz); if (p && !p.gdl && CFG.lorries.includes(String(f.querySelector('[name=vehicle]').value||'').trim()) && !ls.some(l=>l.x_role==='driver'&&sel[l.id].length)) w.push('No GDL on record — add a GDL driver for the lorry.');
+  picWarn.textContent=w.join(' · '); };
+picSel.onchange=checkPic; f.querySelector('[name=vehicle]').onchange=checkPic; checkPic();
+f.querySelector('[data-cancel]').onclick=()=>render();
+f.onsubmit=async ev=>{ ev.preventDefault(); const fd=new FormData(f); const btn=f.querySelector('[type=submit]'); btn.disabled=true;
+try {
+const vals={ x_pic_id: fd.get('pic')?+fd.get('pic'):false, x_vehicle: fd.get('vehicle'), x_depart_time: toFloat(fd.get('depart')), x_setup_time: toFloat(fd.get('setup')), x_serve_time: toFloat(fd.get('serve')), x_clear_time: toFloat(fd.get('clear')), x_studio_notes: '<p>'+esc(fd.get('notes')).replace(/\n/g,'<br>')+'</p>' };
+await rpc(EVENT,'write',[[id],vals]);
+for (const l of ls){ const chosen=sel[l.id]||[]; const booked=+fd.get('booked_'+l.id)||0;
+await rpc(LINE,'write',[[l.id],{x_booked:Math.max(booked,chosen.length), x_employee_ids:[[6,0,chosen]], x_source:'manual'}]); }
+toast('Saved.'); await load();
+} catch(err){ toast('Could not save: '+err.message); btn.disabled=false; } };
+}
+async function toggleFinal(){
+const live=state.events.filter(e=>stageName(e)!=='Cancelled'); const fin=live.every(e=>stageName(e)==='Published');
+const stage = fin ? state.stages['Draft'] : state.stages['Published'];
+const vals = { x_studio_stage_id: stage }; if (!fin) vals.x_published_at = new Date().toISOString().slice(0,19).replace('T',' ');
+try { await rpc(EVENT,'write',[live.map(e=>e.id),vals]); toast(fin?'Day reopened as Draft.':'Day marked Final. Staff copy and PDF will be generated.'); await load(); } catch(err){ toast('Could not update: '+err.message); }
+}
+function showWa(){
+const live=state.events.filter(e=>stageName(e)!=='Cancelled'); const fin=live.length&&live.every(e=>stageName(e)==='Published');
+let s=`*TEAFFANI OPS — ${fmtDate(state.cur).toUpperCase()}*${fin?'':' (DRAFT)'}\n`;
+live.forEach(e=>{ const ls=state.lines[e.id]||[]; s+=`\n*${soOf(e)}${otherCo(e)?' ['+otherCo(e).toUpperCase()+']':''} · ${e.x_customer_id?e.x_customer_id[1]:e.x_name}* — ${e.x_pax||'?'} pax\n${e.x_name}${e.x_venue?' · '+e.x_venue:''}\n`;
+const t=[]; if(e.x_depart_time) t.push('Depart '+hhmm(e.x_depart_time)); if(e.x_setup_time) t.push('Setup '+hhmm(e.x_setup_time)); if(e.x_serve_time) t.push('Serve '+hhmm(e.x_serve_time)); if(e.x_clear_time) t.push('Clear '+hhmm(e.x_clear_time)); if(t.length) s+=t.join(' → ')+'\n';
+s+=`PIC: ${e.x_pic_id?e.x_pic_id[1]:'-'} | Vehicle: ${e.x_vehicle||'-'}\n`;
+ls.forEach(l=>{ const names=(l.x_employee_ids_names||[]).join(', '); s+=`${ROLE_LABEL[l.x_role]||l.x_role}: ${names||((l.x_booked||0)+' PT')}${l.x_flag?' ⚠ '+(l.x_flag_note||''):''}\n`; });
+const n=stripHtml(e.x_studio_notes); if(n) s+=`Note: ${n}\n`; });
+if (state.day && state.day.x_kitchen_plan) s += '\n*KITCHEN*\n' + state.day.x_kitchen_plan + '\n';
+if (state.day && (state.day.x_off_banquet||state.day.x_off_kitchen)) s += `\nOFF — Banquet: ${state.day.x_off_banquet||'-'} | Kitchen: ${state.day.x_off_kitchen||'-'}\n`;
+$('#opsWaText').value=s; $('#opsWaBox').hidden=false;
+navigator.clipboard.writeText(s).then(()=>toast('Copied. Paste into the WhatsApp group.')).catch(()=>{ $('#opsWaText').focus(); $('#opsWaText').select(); toast('Select the text and copy it.'); });
+}
+init().catch(err=>{ $('#opsBody').innerHTML='<div class="empty">Could not load schedule: '+esc(err.message)+'</div>'; });
+})();
+</script>
+
+<!-- ===================================================================
+TEAFFANI OPS SCHEDULE — ADD-ON (WhatsApp timeline text + Print/PDF)
+Overrides showWa() and adds a Print button.
+=================================================================== -->
+<style id="ops-print-css">
+@media print {
+@page { size: A4 portrait; margin: 10mm 9mm; }
+html, body { background: #fff !important; }
+header, footer, nav, #top, #top_menu, #wrapwrap > header, #wrapwrap > footer,
+.o_header_standard, .o_footer, .o_main_nav, .navbar, .o_cookies_bar,
+.o_livechat_button, .o-livechat-root, #o_livechat_button,
+button, input[type="date"], .ops-no-print { display: none !important; }
+#wrapwrap, #wrapwrap > main, main { padding: 0 !important; margin: 0 !important; }
+body * { box-shadow: none !important; font-size: 11px; }
+h1, h2 { font-size: 15px !important; margin: 0 0 4px !important; }
+[class*="card"], [class*="event"], [class*="block"], section, article {
+break-inside: avoid; page-break-inside: avoid;
+}
+[class*="warn"], [class*="flag"], [class*="alert"] { display: none !important; }
+#ops-wa-modal { display: none !important; }
+}
+#ops-wa-modal { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 9999;
+display: flex; align-items: center; justify-content: center; padding: 16px; }
+#ops-wa-modal .box { background: #fff; border-radius: 10px; width: min(640px, 100%);
+max-height: 90vh; display: flex; flex-direction: column; padding: 14px; gap: 10px; }
+#ops-wa-modal textarea { flex: 1; min-height: 55vh; font: 13px/1.4 -apple-system, "Segoe UI", Roboto, sans-serif;
+white-space: pre-wrap; border: 1px solid #ccc; border-radius: 6px; padding: 10px; resize: vertical; }
+#ops-wa-modal .row { display: flex; gap: 8px; justify-content: flex-end; }
+#ops-wa-modal .row button { width: auto; flex: 0 0 auto; margin: 0; }
+#ops-wa-modal button { padding: 7px 14px; border-radius: 6px; border: 1px solid #1f2d4a; background: #1f2d4a; color: #fff; cursor: pointer; }
+#ops-wa-modal button.secondary { background: #fff; color: #1f2d4a; }
+</style>
+
+<script id="ops-addon">
+(function () {
+'use strict';
+
+// ---------- config ----------
+var LORRIES = ['BSH 1887', 'BRU 3231', 'WB 1270 Q', 'BMG 6016'];
+var MAJU_RE = /maju/i;
+var STATE_WORDS = ['Malaysia', 'Selangor', 'Kuala Lumpur', 'W.Persekutuan', 'W. Persekutuan',
+'Wilayah Persekutuan', 'Putrajaya', 'Negeri Sembilan', 'Johor', 'Melaka', 'Perak', 'Pahang',
+'Kedah', 'Penang', 'Pulau Pinang', 'Terengganu', 'Kelantan', 'Perlis', 'Labuan'];
+// Short names used on WhatsApp (Odoo holds full legal names)
+var SHORT = {
+'Muhammad Farhan Bin Roslan': 'Farhan', 'Muhammad Rejab Bin Naaim': 'Rejab',
+'Muhammad Rohaizad Bin Mohd Noor': 'Rohaizad', 'Wan Ahmad Saifuddin Bin Mohammad': 'Wan',
+'Ahmad Amirul Zaid Bin Ahmad Nizam': 'Amirul', 'Muhammad Anas Bin Abdul Hafiz': 'Anas',
+'Putera Amirul Shafiq Bin Sabri': 'Putera', 'Muhammad Lokman Bin Rahim': 'Lokman',
+'Ammar Muhtadee Iman Bin Abdul Halim': 'Amar Iman', 'Mohamad Abdul Zakwan Bin Mat Zaki': 'Zakwan',
+"Muhammad Mu'izz Raof Bin Hisham": "Mu'izz", 'Hirnane Bin Jun (Bun)': 'Hirnane', 'Zakaria Khan': 'Topu',
+'Tan Zeng Han': 'Han', 'Saw Xian Perng': 'Perng', 'Guro Tharu Ramdev': 'Ramdev'
+};
+
+// ---------- helpers ----------
+function rpc(model, method, args, kwargs) {
+return fetch('/web/dataset/call_kw/' + model + '/' + method, {
+method: 'POST', headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ jsonrpc: '2.0', method: 'call', params: { model: model, method: method, args: args, kwargs: kwargs || {} } })
+}).then(function (r) { return r.json(); }).then(function (j) {
+if (j.error) throw new Error(j.error.data && j.error.data.message || 'RPC error');
+return j.result;
+});
+}
+function hm(f) { // 6.5 -> "06:30"
+if (f === false || f === null || f === undefined) return '--:--';
+var h = Math.floor(f), m = Math.round((f - h) * 60);
+return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+}
+function shortName(full) {
+if (!full) return '';
+if (SHORT[full]) return SHORT[full];
+var p = full.replace(/\s*\(.*?\)\s*/g, ' ').trim().split(/\s+/);
+if (/^(muhammad|mohammad|mohamad|mohd|md|ahmad|wan|nur|nurul|siti)$/i.test(p[0]) && p[1]) return p[1];
+return p[0];
+}
+function stripHtml(s) { var d = document.createElement('div'); d.innerHTML = s || ''; return (d.textContent || '').trim(); }
+function clientName(ev) {
+var c = (ev.x_name || '').split(' — ')[0].split(' - ')[0].trim();
+c = c.split(',')[0].trim(); // drop ", <contact name>"
+c = c.replace(/\s+(sdn\.?\s*bhd\.?|berhad|bhd\.?|plt|sdn)\s*$/i, '').trim(); // drop legal suffix
+return c;
+}
+function area(venue) {
+var parts = (venue || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+function clean(t) {
+t = t.replace(/\b\d{5}\b/g, '');
+STATE_WORDS.forEach(function (w) { t = t.replace(new RegExp(w.replace('.', '\\.'), 'ig'), ''); });
+return t.replace(/\s+/g, ' ').trim();
+}
+for (var i = parts.length - 1; i >= 1; i--) { var a = clean(parts[i]); if (a) return a; }
+return '';
+}
+function vehicleIcon(v) {
+v = v || '';
+if (/lalamove/i.test(v)) return /bike/i.test(v) ? '🛵' : '🚗';
+if (LORRIES.indexOf(v.trim()) >= 0) return '🚚';
+return '🚐';
+}
+function dayLabel(iso) {
+var d = new Date(iso + 'T00:00:00');
+var D = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][d.getDay()];
+var M = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'][d.getMonth()];
+return D + ' ' + d.getDate() + ' ' + M + ' ' + d.getFullYear();
+}
+function currentDate() {
+var inp = document.querySelector('input[type="date"]');
+if (inp && inp.value) return inp.value;
+if (window.state && state.date) return state.date;
+var d = new Date(); return d.toISOString().slice(0, 10);
+}
+
+// ---------- data ----------
+function loadDay(date) {
+return Promise.all([
+rpc('x_event', 'search_read', [[['x_event_date', '=', date]]], {
+fields: ['x_name', 'x_company', 'x_event_type', 'x_pax', 'x_venue', 'x_vehicle', 'x_pic_id',
+'x_depart_time', 'x_setup_time', 'x_serve_time', 'x_clear_time', 'x_studio_notes',
+'x_studio_stage_id', 'x_so_id', 'x_studio_sequence'],
+order: 'x_depart_time, x_studio_sequence, id'
+}),
+rpc('x_event_line_833dc', 'search_read', [[['x_event_id.x_event_date', '=', date]]], {
+fields: ['x_event_id', 'x_role', 'x_required', 'x_employee_ids', 'x_name', 'x_studio_sequence']
+}),
+rpc('x_ops_day', 'search_read', [[['x_name', '=', date]]], { fields: ['x_kitchen_plan', 'x_off_banquet', 'x_off_kitchen', 'x_notes'], limit: 1 })
+]).then(function (res) {
+var events = res[0], lines = res[1], day = res[2][0] || {};
+var ids = {};
+lines.forEach(function (l) { l.x_employee_ids.forEach(function (i) { ids[i] = 1; }); });
+events.forEach(function (e) { if (e.x_pic_id) ids[e.x_pic_id[0]] = 1; });
+var idList = Object.keys(ids).map(Number);
+var p = idList.length ? rpc('hr.employee.public', 'read', [idList, ['name']]) : Promise.resolve([]);
+return p.then(function (emps) {
+var names = {}; emps.forEach(function (e) { names[e.id] = e.name; });
+return { date: date, events: events, lines: lines, day: day, names: names };
+});
+});
+}
+
+// ---------- text builder ----------
+function buildText(d) {
+var stage = function (e) { return e.x_studio_stage_id ? e.x_studio_stage_id[1] : ''; };
+var live = d.events.filter(function (e) { return stage(e) !== 'Cancelled'; });
+var isFinal = live.length && live.every(function (e) { return stage(e) === 'Published'; });
+var byEvent = {};
+d.lines.forEach(function (l) { var k = l.x_event_id[0]; (byEvent[k] = byEvent[k] || []).push(l); });
+var sn = function (id) { return shortName(d.names[id] || ('#' + id)); };
+
+var vehicles = {}, lala = 0;
+live.forEach(function (e) {
+var v = (e.x_vehicle || '').trim();
+if (!v) return;
+if (/lalamove/i.test(v)) lala++; else vehicles[v] = 1;
+});
+
+var out = [];
+out.push('*TEAFFANI OPS — ' + dayLabel(d.date) + '*');
+out.push(live.length + ' event' + (live.length === 1 ? '' : 's') + ' · ' + Object.keys(vehicles).length + ' vehicle' + (Object.keys(vehicles).length === 1 ? '' : 's') + (lala ? ' · ' + lala + ' Lalamove' : ''));
+if (!isFinal) out.push('⚠️ DRAFT — may still change');
+out.push('');
+
+var person = {}; // short name -> [ {t, so} ]
+function tag(name, e) { (person[name] = person[name] || []).push({ t: e.x_depart_time, so: e.x_so_id ? e.x_so_id[1] : '' }); }
+
+live.forEach(function (e) {
+var so = e.x_so_id ? e.x_so_id[1] : '';
+var maju = MAJU_RE.test(e.x_company || '');
+var type = (e.x_event_type || '').replace(/^\w/, function (c) { return c.toUpperCase(); });
+var where = clientName(e) + (area(e.x_venue) ? ', ' + area(e.x_venue) : '');
+var ls = byEvent[e.id] || [];
+var role = function (r) { return ls.filter(function (l) { return l.x_role === r; }); };
+var named = function (r) { var s = []; role(r).forEach(function (l) { l.x_employee_ids.forEach(function (i) { var n = sn(i); if (s.indexOf(n) < 0) s.push(n); }); }); return s; };
+var sup = named('supervisor'), drv = named('driver'), srv = named('server'), chf = named('chef'), stw = named('steward');
+if (!sup.length && e.x_pic_id) sup = [sn(e.x_pic_id[0])];
+var pt = 0;
+ls.forEach(function (l) {
+if (['server', 'chef', 'steward', 'manpower', 'special'].indexOf(l.x_role) < 0) return;
+pt += Math.max((l.x_required || 0) - l.x_employee_ids.length, 0);
+});
+// drop-offs (Lalamove, or bento with no service window) collapse to one line
+var isDelivery = (/lalamove/i.test(e.x_vehicle || '') && !srv.length) ||
+(e.x_event_type === 'bento' && !srv.length && Math.abs((e.x_clear_time || 0) - (e.x_serve_time || 0)) <= 0.5);
+
+if (isDelivery) {
+var who = sup[0] || drv[0];
+out.push('*' + hm(e.x_depart_time) + '* ' + vehicleIcon(e.x_vehicle) + ' ' + (e.x_vehicle || 'no vehicle') + (who ? ' · ' + who : '') + ' · ' + so + ' ' + where + ' · ' + type + ' ' + e.x_pax + ' pax · Serve ' + hm(e.x_serve_time) + (pt ? ' · ' + pt + ' PT' : '') + (maju ? ' 🟢 MAJU' : ''));
+if (who) tag(who, e);
+out.push('');
+return;
+}
+
+// head line
+var head = '*' + hm(e.x_depart_time) + '* ' + vehicleIcon(e.x_vehicle) + ' ' + (e.x_vehicle || 'no vehicle');
+var lead = sup[0] || drv[0];
+if (lead) head += ' · ' + lead;
+if (maju) head += ' 🟢 MAJU';
+out.push(head);
+out.push(so + ' ' + where + ' · ' + type + ' ' + e.x_pax + ' pax' + addon(e));
+out.push('Setup ' + hm(e.x_setup_time) + ' · Serve ' + hm(e.x_serve_time) + ' · Clear ' + hm(e.x_clear_time));
+
+// team line
+var team = [];
+var roles = {};
+sup.forEach(function (n) { (roles[n] = roles[n] || []).push('sup'); });
+drv.forEach(function (n) { (roles[n] = roles[n] || []).push('driver'); });
+Object.keys(roles).forEach(function (n) { team.push(n + ' (' + roles[n].join('/') + ')'); });
+srv.forEach(function (n) { if (!roles[n]) team.push(n); });
+chf.forEach(function (n) { if (!roles[n]) team.push(n + ' (chef)'); });
+stw.forEach(function (n) { if (!roles[n]) team.push(n + ' (steward)'); });
+if (pt) team.push(pt + ' PT');
+out.push('Team: ' + (team.length ? team.join(', ') : '—'));
+Object.keys(roles).forEach(function (n) { tag(n, e); });
+srv.concat(chf, stw).forEach(function (n) { if (!roles[n]) tag(n, e); });
+
+var note = stripHtml(e.x_studio_notes);
+if (note && !/^Includes add-on/i.test(note) && !/^Merged into/i.test(note)) out.push('Note: ' + note);
+out.push('');
+});
+
+// by person
+var people = Object.keys(person).sort(function (a, b) { return person[a][0].t - person[b][0].t; });
+if (people.length) {
+out.push('*BY PERSON*');
+people.forEach(function (n) {
+out.push(n + ' → ' + person[n].map(function (x) { return x.so + ' ' + hm(x.t); }).join(', '));
+});
+out.push('');
+}
+
+if (d.day.x_kitchen_plan) { out.push('*KITCHEN*'); out.push(d.day.x_kitchen_plan.trim()); out.push(''); }
+if (d.day.x_off_banquet || d.day.x_off_kitchen) {
+out.push('*OFF*');
+if (d.day.x_off_banquet) out.push('Banquet: ' + d.day.x_off_banquet);
+if (d.day.x_off_kitchen) out.push('Kitchen: ' + d.day.x_off_kitchen);
+out.push('');
+}
+if (d.day.x_notes) { out.push('*NOTES*'); out.push(d.day.x_notes.trim()); out.push(''); }
+return out.join('\n').trim();
+
+function addon(e) {
+var n = stripHtml(e.x_studio_notes);
+var m = n.match(/add-on order\(s\):\s*(.+)$/i);
+return m ? ' (+' + m[1].trim().replace(/\s*\(([^)]*)\)/g, ', $1') + ')' : '';
+}
+}
+
+// ---------- modal ----------
+function showModal(text) {
+var old = document.getElementById('ops-wa-modal'); if (old) old.remove();
+var m = document.createElement('div'); m.id = 'ops-wa-modal';
+m.innerHTML = '<div class="box"><strong>WhatsApp text — select all & copy, or tap Copy</strong>' +
+'<textarea readonly></textarea><div class="row"><button class="secondary" data-x="close">Close</button><button data-x="copy">Copy</button></div></div>';
+m.querySelector('textarea').value = text;
+m.addEventListener('click', function (ev) {
+var x = ev.target.getAttribute && ev.target.getAttribute('data-x');
+if (x === 'close' || ev.target === m) m.remove();
+if (x === 'copy') {
+var ta = m.querySelector('textarea'); ta.select();
+(navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).catch(function () { document.execCommand('copy'); })
+.then(function () { ev.target.textContent = 'Copied ✓'; });
+}
+});
+document.body.appendChild(m);
+}
+
+// ---------- public ----------
+window.opsWaText = function (date) { return loadDay(date || currentDate()).then(buildText); };
+window.showWa = function () {
+window.opsWaText().then(showModal).catch(function (e) {
+console.error(e); if (typeof toast === 'function') toast('Could not build WhatsApp text: ' + e.message); else showModal('Error: ' + e.message);
+});
+};
+window.opsPrint = function () {
+var t = document.title; document.title = 'Ops Schedule ' + currentDate();
+window.print(); setTimeout(function () { document.title = t; }, 1000);
+};
+
+// add Print / PDF button next to "WhatsApp text"
+function addPrintBtn() {
+if (document.getElementById('ops-print-btn')) return;
+var wa = Array.prototype.filter.call(document.querySelectorAll('button'), function (b) { return /whatsapp text/i.test(b.textContent); })[0];
+if (!wa) return;
+// rebind the WhatsApp button to the new builder (drops any listener bound to the old showWa)
+var wa2 = wa.cloneNode(true); wa2.removeAttribute('onclick'); wa2.addEventListener('click', function () { window.showWa(); });
+wa.replaceWith(wa2); wa = wa2;
+var b = wa.cloneNode(false); b.id = 'ops-print-btn'; b.textContent = 'Print / PDF';
+b.removeAttribute('onclick'); b.addEventListener('click', window.opsPrint);
+wa.insertAdjacentElement('afterend', b);
+}
+addPrintBtn();
+new MutationObserver(addPrintBtn).observe(document.body, { childList: true, subtree: true });
+})();
+</script>
